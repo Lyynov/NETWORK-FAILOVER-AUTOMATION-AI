@@ -1,0 +1,74 @@
+/* dashboard/static/css/style.css */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-title {
+    margin-bottom: 0;
+    color: #212529;
+}
+
+/* Interface status cards */
+.interface-card {
+    transition: all 0.3s ease;
+}
+
+.interface-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Chart styles */
+canvas {
+    width: 100% !important;
+}
+
+/* Table styles */
+.table th {
+    font-weight: 600;
+}
+
+/* Button styles for metric selection */
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+/* Footer styles */
+footer {
+    margin-top: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    canvas {
+        height: 250px !important;
+    }
+}

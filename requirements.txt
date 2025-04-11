@@ -1,0 +1,13 @@
+# requirements.txt
+flask==2.2.3
+routeros-api==0.17.0
+python-dotenv==1.0.0
+numpy==1.24.2
+scikit-learn==1.2.2
+pandas==1.5.3
+requests==2.28.2
+pytest==7.3.1
+pytest-cov==4.1.0
+matplotlib==3.7.1
+seaborn==0.12.2
+gunicorn==20.1.0

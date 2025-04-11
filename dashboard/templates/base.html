@@ -1,0 +1,152 @@
+<!-- dashboard/templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Network Failover Automation{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Network Failover Automation</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#metrics">Metrics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#events">Events</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-dark text-white py-3">
+        <div class="container text-center">
+            <small>Network Failover Automation System &copy; {{ now.year }}</small>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+
+<!-- dashboard/templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Network Failover Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Network Status Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="interface-status-cards">
+                    <!-- Status cards will be populated by JavaScript -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4" id="metrics">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="card-title">Network Metrics</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-metric="latency">Latency</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-metric="packet_loss">Packet Loss</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-metric="bandwidth_usage">Bandwidth</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="metrics-chart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" id="events">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Recent Failover Events</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>From Interface</th>
+                                <th>To Interface</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-table">
+                            <!-- Events will be populated by JavaScript -->
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the dashboard
+        initDashboard();
+        
+        // Update data every 10 seconds
+        setInterval(updateDashboard, 10000);
+        
+        // Set up metric type switching
+        document.querySelectorAll('[data-metric]').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('[data-metric]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                updateMetricsChart(this.getAttribute('data-metric'));
+            });
+        });
+    });
+</script>
+{% endblock %}
