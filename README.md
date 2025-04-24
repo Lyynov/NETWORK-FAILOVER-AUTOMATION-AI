@@ -76,6 +76,116 @@ Sesuaikan konfigurasi di `.env` dan `config/settings.py`:
 
 5. **Pemulihan**: Sistem juga secara teratur memeriksa interface utama dan beralih kembali ketika sudah berfungsi normal.
 
+## Testing Menggunakan GNS3
+
+Anda dapat menguji sistem failover ini menggunakan simulasi MikroTik di GNS3 sebelum implementasi pada perangkat fisik.
+
+### Persiapan GNS3
+
+1. **Instalasi GNS3 dan GNS3 VM**:
+   ```bash
+   # Unduh dan instal GNS3 dari https://gns3.com/software
+   # Unduh GNS3 VM dari https://gns3.com/software/download-vm
+   ```
+
+2. **Siapkan Image MikroTik RouterOS**:
+   - Unduh image RouterOS CHR (Cloud Hosted Router) dari situs MikroTik
+   - Import image ke GNS3 sebagai appliance
+
+3. **Buat Topologi Pengujian**:
+   ```
+   Internet (Cloud) --- [ether1] MikroTik Router [ether2] --- Komputer Pengujian
+                          [ether3]
+                             |
+                      Jalur Backup/ISP Alternatif
+   ```
+
+### Konfigurasi MikroTik di GNS3
+
+1. **Aktifkan API RouterOS**:
+   ```
+   /ip service enable api
+   /ip service set api address=0.0.0.0/0
+   ```
+
+2. **Konfigurasi Interface Dasar**:
+   ```
+   /ip address add address=192.168.1.1/24 interface=ether1
+   /ip address add address=192.168.2.1/24 interface=ether2
+   /ip address add address=192.168.3.1/24 interface=ether3
+   ```
+
+3. **Konfigurasi Routing untuk Pengujian**:
+   ```
+   /ip route add dst-address=0.0.0.0/0 gateway=192.168.1.254 routing-mark=via-ether1
+   /ip route add dst-address=0.0.0.0/0 gateway=192.168.3.254 routing-mark=via-ether3 distance=10
+   ```
+
+### Menjalankan Pengujian dengan GNS3
+
+1. **Penyesuaian Konfigurasi**:
+   - Sesuaikan file `.env` untuk terhubung ke MikroTik di GNS3:
+   ```
+   MIKROTIK_HOST=192.168.2.1  # IP MikroTik dari sisi komputer pengujian
+   MIKROTIK_USER=admin
+   MIKROTIK_PASSWORD=password
+   PRIMARY_INTERFACE=ether1
+   SECONDARY_INTERFACES=ether3
+   ```
+
+2. **Pengujian Dasar**:
+   - Jalankan aplikasi dan verifikasi koneksi ke router
+   - Periksa dashboard untuk memastikan metrik diambil dengan benar
+
+3. **Simulasi Kegagalan**:
+   - Simulasikan kegagalan interface primer dengan menonaktifkan interface di MikroTik:
+   ```
+   /interface disable ether1
+   ```
+   - Atau tambahkan latency/packet loss untuk memicu failover:
+   ```
+   /queue simple add target=0.0.0.0/0 interface=ether1 packet-mark=no-mark limit-at=512k/512k max-limit=1M/1M queue=default/default packet-loss=20%
+   ```
+
+4. **Verifikasi Failover**:
+   - Periksa log aplikasi dan dashboard untuk memastikan failover terjadi
+   - Verifikasi bahwa traffic dialihkan ke interface sekunder
+
+5. **Pengujian Pemulihan**:
+   - Aktifkan kembali interface primer:
+   ```
+   /interface enable ether1
+   ```
+   - Atau hapus pembatasan:
+   ```
+   /queue simple remove [find target=0.0.0.0/0 interface=ether1]
+   ```
+   - Verifikasi sistem kembali ke interface utama setelah beberapa saat
+
+### Integrasi dengan CI/CD untuk Automated Testing
+
+Anda dapat mengotomatisasi pengujian GNS3 dengan menggunakan GNS3 Server API:
+
+```python
+# Contoh script untuk otomatisasi pengujian
+import requests
+import time
+
+# Connect to GNS3 API
+gns3_api = "http://localhost:3080/v2"
+
+# Disable primary interface
+requests.put(f"{gns3_api}/projects/{project_id}/links/{link_id}/stop")
+
+# Wait and check if failover occurs
+time.sleep(30)
+
+# Re-enable primary interface
+requests.put(f"{gns3_api}/projects/{project_id}/links/{link_id}/start")
+
+# Check metrics and events in the database
+```
+
 ## Struktur Proyek
 
 ```
